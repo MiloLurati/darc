@@ -8,7 +8,10 @@ Note: For now I just use the adminAccess policy because I haven't figured out th
 Install AWS CLI and add the user keys.
 
 ## Potential issues
-If provisioning everything from zero, you will probably have to first provision all modules and resources that are not the cluster-autoscaler, and with a second apply provision the cluster-autoscaler. Inbetween the applies run the following to add the provisioned cluster to kubectl `aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)`.
+If provisioning everything from zero, you will probably have to first provision all modules and resources that are not the cluster-autoscaler, and with a second apply provision the cluster-autoscaler. Inbetween the applies run the following to add the provisioned cluster to kubectl: 
+```
+aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
+```
 
 ## Test cluster-autoscaler
 First we need to apply the following deployment (currently at 0 replicas):
