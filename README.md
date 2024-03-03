@@ -12,10 +12,18 @@ If provisioning everything from zero, you will probably have to first provision 
 
 ## Test cluster-autoscaler
 First we need to apply the following deployment (currently at 0 replicas):
-```kubectl apply -f cluter-autoscaler-deployment.yaml```
+```
+kubectl apply -f cluter-autoscaler-deployment.yaml
+```
 Increase the replicas:
-```kubectl scale deployment inflate --replicas 5```
+```
+kubectl scale deployment inflate --replicas 5
+```
 Check for the pod increase:
-```kubectl get pods -n kube-system```
+```
+kubectl get pods -n kube-system
+```
 Observe the node increase:
-```kubectl get nodes```
+```
+kubectl get nodes
+```
