@@ -1,83 +1,15 @@
-# This action is needed to initially update the Kubernetes context and get access to the cluster
-module "allow_eks_access_iam_policy" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "5.35.0"
-
-  name          = "allow-eks-access"
-  create_policy = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "eks:DescribeCluster",
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      },
-    ]
-  })
+module "iam_assumable_role_admin" {
+  source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version                       = "5.35.0" 
+  create_role                   = true
+  role_name                     = "cluster-autoscaler"
+  provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
+  role_policy_arns              = [aws_iam_policy.cluster_autoscaler.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:${local.k8s_service_account_namespace}:${local.k8s_service_account_name}"]
 }
 
-# Next is the IAM role that we will use to access the cluster
-module "eks_admins_iam_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "5.35.0"
-
-  role_name         = "arc-eks-admin"
-  create_role       = true
-  role_requires_mfa = false
-
-  custom_role_policy_arns = [module.allow_eks_access_iam_policy.arn]
-
-  trusted_role_arns = [
-    "arn:aws:iam::${module.vpc.vpc_owner_id}:root"
-  ]
-}
-
-# IAM user that gets access to the arc-eks-admin role
-module "user1_iam_user" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-user"
-  version = "5.3.1"
-
-  name                          = "user1"
-  create_iam_access_key         = false
-  create_iam_user_login_profile = false
-
-  force_destroy = true
-}
-
-# Then IAM policy to allow assume darc-eks-admin IAM role
-module "allow_assume_eks_admins_iam_policy" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "5.3.1"
-
-  name          = "allow-assume-eks-admin-iam-role"
-  create_policy = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "sts:AssumeRole",
-        ]
-        Effect   = "Allow"
-        Resource = module.eks_admins_iam_role.iam_role_arn
-      },
-    ]
-  })
-}
-
-# Finally, we need to create an IAM group with the previous policy and put our user1 in this group
-module "eks_admins_iam_group" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-group-with-policies"
-  version = "5.3.1"
-
-  name                              = "darc-eks-admin"
-  attach_iam_self_management_policy = false
-  create_group                      = true
-  group_users                       = [module.user1_iam_user.iam_user_name]
-  custom_group_policy_arns          = [module.allow_assume_eks_admins_iam_policy.arn]
+resource "aws_iam_policy" "cluster_autoscaler" {
+  name_prefix = "cluster-autoscaler"
+  description = "EKS cluster-autoscaler policy for cluster ${module.eks.cluster_name}"
+  policy      = data.aws_iam_policy_document.cluster_autoscaler.json
 }

@@ -2,58 +2,62 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.4.0"
 
-  cluster_name    = "darc-eks"
+  cluster_name    = local.cluster_name
   cluster_version = "1.29"
 
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = true
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = [module.vpc.public_subnets[0], module.vpc.public_subnets[1]]
-
-  enable_irsa = true
+  vpc_id                         = module.vpc.vpc_id
+  subnet_ids                     = module.vpc.public_subnets
+  cluster_endpoint_public_access = true
 
   eks_managed_node_group_defaults = {
-    disk_size = 50
+    ami_type = "AL2_x86_64"
+
   }
 
   eks_managed_node_groups = {
-    general = {
-      desired_size = 1
-      min_size     = 1
-      max_size     = 3
+    group-1 = {
+      name = "group1"
 
-      iam_role_attach_cni_policy = true
+      instance_types = ["t2.micro"]
+      capacity_type  = "ON_DEMAND"
+
+      min_size     = 1
+      max_size     = 4
+      desired_size = 1
 
       labels = {
-        role = "general"
+        role = local.nodegroup1_label
       }
 
-      instance_types = ["t2.small"]
-      capacity_type  = "ON_DEMAND"
+      tags = {
+        "k8s.io/cluster-autoscaler/enabled"                  = "true"
+        "k8s.io/cluster-autoscaler/${local.cluster_name}"    = "owned"
+        "k8s.io/cluster-autoscaler/node-template/label/role" = "${local.nodegroup1_label}"
+      }
     }
 
-    # spot = {
-    #   desired_size = 1
-    #   min_size     = 1
-    #   max_size     = 2
+    group-2 = {
+      name = "group2"
 
-    #   labels = {
-    #     role = "spot"
-    #   }
+      instance_types = ["t2.micro"]
+      capacity_type  = "SPOT"
 
-    #   taints = [{
-    #     key    = "market"
-    #     value  = "spot"
-    #     effect = "NO_SCHEDULE"
-    #   }]
+      min_size     = 1
+      max_size     = 4
+      desired_size = 1
 
-    #   instance_types = ["t2.micro"]
-    #   capacity_type  = "SPOT"
-    # }
+      labels = {
+        role = local.nodegroup2_label
+      }
+
+      tags = {
+        "k8s.io/cluster-autoscaler/enabled"                  = "true"
+        "k8s.io/cluster-autoscaler/${local.cluster_name}"    = "owned"
+        "k8s.io/cluster-autoscaler/node-template/label/role" = "${local.nodegroup2_label}"
+      }
+    }
   }
 
-  tags = {
-    Environment = "staging"
-  }
+  # To add the current caller identity as an administrator
+  enable_cluster_creator_admin_permissions = true
 }
