@@ -7,6 +7,7 @@ resource "aws_autoscaling_group_tag" "nodegroup1" {
     value               = each.value
     propagate_at_launch = true
   }
+  depends_on = [ module.vpc, module.eks ]
 }
 
 resource "aws_autoscaling_group_tag" "nodegroup2" {
@@ -18,6 +19,7 @@ resource "aws_autoscaling_group_tag" "nodegroup2" {
     value               = each.value
     propagate_at_launch = true
   }
+  depends_on = [ module.vpc, module.eks ]
 }
 
 resource "helm_release" "cluster-autoscaler" {
