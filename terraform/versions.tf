@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.7.0"
+      version = ">= 5.38.0"
     }
 
     random = {
@@ -15,9 +15,9 @@ terraform {
       version = "~> 4.0.4"
     }
 
-    cloudinit = {
-      source  = "hashicorp/cloudinit"
-      version = "~> 2.3.2"
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.7.0" # ">= 1.14.0"
     }
   }
 
