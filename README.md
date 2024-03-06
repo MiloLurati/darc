@@ -7,8 +7,11 @@ Note: For now I just use the adminAccess policy because I haven't figured out th
 ## Set up AWS CLI Profile
 Install AWS CLI and add the user keys.
 
-## Provisioning Steps
-If provisioning everything from zero, you will probably have to first provision all modules and resources that are not the cluster-autoscaler, and with a second apply provision the cluster-autoscaler. Inbetween the applies run the following to add the provisioned cluster to kubectl: 
+## Set Enviroment variable
+Before executing the terraform code, you need to set up the enviroment variable KUBECONFIG with the "~/.kube/config" path.
+
+## Use kubectl with new Cluster
+Before executing kubectl commands, you need to configure kubectl with the new cluster:
 ```
 aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
 ```
