@@ -6,3 +6,8 @@ variable "region" {
   type        = string
   default     = "eu-central-1"
 }
+
+variable "iam_user" {
+  type = string
+  default = "default_iam_user"
+}

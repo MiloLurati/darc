@@ -13,3 +13,26 @@ resource "aws_iam_policy" "cluster_autoscaler" {
   description = "EKS cluster-autoscaler policy for cluster ${module.eks.cluster_name}"
   policy      = data.aws_iam_policy_document.cluster_autoscaler.json
 }
+
+resource "aws_iam_user" "iam_user" {
+  name = var.iam_user
+}
+
+# Encrypted key can be retrieved usig `terraform output` after `terraform apply`
+resource "aws_iam_access_key" "iam_user_key" {
+  user = aws_iam_user.iam_user.name
+}
+
+data "aws_iam_policy_document" "iam_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*"]  # TODO: Change to actions we need
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_user_policy" "iam_policy" {
+  name   = "test"
+  user   = aws_iam_user.iam_user.name
+  policy = data.aws_iam_policy_document.iam_policy.json
+}
