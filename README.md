@@ -1,35 +1,81 @@
 # Dynamic Allocation of Resources in Cloud (DARC)
 
-## Set up User
-Create an IAM User of AWS and Assign it the correct policies (still have to figure out which ones).
-Note: For now I just use the adminAccess policy because I haven't figured out the policies yet of the user.
+## Setup User
+Create an IAM User in AWS and assign it the necessary policies. It's important to assign only the permissions needed for the operations that DARC will perform to adhere to the principle of least privilege.
 
-## Set up AWS CLI Profile
-Install AWS CLI and add the user keys.
+**Note:** Temporarily, you may use the `AdministratorAccess` policy for convenience, but it's crucial to identify and apply more granular policies tailored to your requirements for security best practices.
 
-## Set Enviroment variable
-Before executing the terraform code, you need to set up the enviroment variable KUBECONFIG with the "~/.kube/config" path.
+## Setup AWS CLI Profile
+1. Install the AWS CLI following the instructions from the official AWS documentation.
+2. Configure the AWS CLI by running `aws configure` and inputting your new IAM user's access key ID and secret access key when prompted.
 
-## Use kubectl with new Cluster
-Before executing kubectl commands, you need to configure kubectl with the new cluster:
+## Set Environment Variable
+Before executing the Terraform code, set up the `KUBECONFIG` environment variable to point to your Kubernetes configuration file. This step is necessary for `kubectl` to interact with your cluster.
+
+On Unix-like systems, you can set the variable by adding the following line to your shell profile:
+
+```bash
+export KUBECONFIG="~/.kube/config"
 ```
+
+## Provision Terraform Code
+
+To deploy the infrastructure with Terraform:
+
+1. Initialize Terraform to download all necessary modules and files:
+
+```bash
+terraform init
+```
+
+2. Apply the Terraform code to provision the resources:
+
+```bash
+terraform apply
+```
+
+## Use kubectl with the New Cluster
+
+To configure `kubectl` to interact with the new cluster:
+
+```bash
 aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
 ```
 
-## Test cluster-autoscaler
-First we need to apply the following deployment (currently at 0 replicas):
+## Requirements to Run Argo Workflows
+
+Specify the service account to run the workflow with by assigning `serviceAccountName` in the `spec`. For example, use "argo-workflow":
+
+```yaml
+...
+spec:
+  serviceAccountName: argo-workflow
+...
 ```
-kubectl apply -f cluter-autoscaler-deployment.yaml
+
+## Test Cluster Autoscaler (Without Argo Workflows)
+
+1. Apply the cluster-autoscaler deployment (initially set to 0 replicas):
+
+```bash
+kubectl apply -f cluster-autoscaler-deployment.yaml
 ```
-Increase the replicas:
+
+2. Increase the number of replicas to trigger autoscaling:
+
+```bash
+kubectl scale deployment inflate --replicas=5
 ```
-kubectl scale deployment inflate --replicas 5
-```
-Check for the pod increase:
-```
+
+3. Observe the increase in pods:
+
+```bash
 kubectl get pods -n kube-system
 ```
-Observe the node increase:
-```
+
+4. Check for an increase in nodes:
+
+```bash
 kubectl get nodes
 ```
+
