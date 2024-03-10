@@ -9,7 +9,7 @@ metadata:
       This is a simple hello world example.
 spec:
   entrypoint: whalesay
-  serviceAccountName: argo-sa
+  serviceAccountName: argo-workflow
   templates:
   - name: whalesay
     container:
