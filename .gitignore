@@ -28,3 +28,5 @@ terraform.rc
 
 # Ignore CLI hcl files
 .terraform.lick.hcl
+
+terraform/.terraform.lock.hcl
