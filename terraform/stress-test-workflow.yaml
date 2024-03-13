@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: stress-test-
+  namespace: argo
+spec:
+  workflowTemplateRef:
+    name: massive
+  arguments:
+    parameters:
+      - name: "nodes"
+        value: "100" # Adjust this number based on your stress test requirements
+      - name: "sleep"
+        value: "10s" # Adjust sleep duration as needed

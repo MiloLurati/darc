@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: matrix-multiplication-
+spec:
+  entrypoint: matrix-operations
+  arguments:
+    parameters:
+    - name: tasks
+      value: "1"  # Number of parallel matrix multiplication tasks
+
+  templates:
+  - name: matrix-operations
+    inputs:
+      parameters:
+      - name: tasks
+    steps:
+    - - name: multiply-matrix
+        template: matrix-multiplication
+    withSequence:
+      start: "1"
+      count: "{{inputs.parameters.tasks}}"
+
+  - name: matrix-multiplication
+    container:
+      image: python:3.9
+      command: [python, -c]
+      args: ["
+            import numpy as np;
+            # Generate two random matrices
+            A = np.random.rand(100, 100)  # Adjust size as needed
+            B = np.random.rand(100, 100)  # Adjust size as needed
+            # Multiply the matrices
+            C = np.dot(A, B)
+            # Optionally, output some information
+            print('Matrix multiplication completed.')
+            "]
+      resources:
+        requests:
+          cpu: "1"
+          memory: "10m"
+        limits:
+          cpu: "2"
+          memory: "20m"            
+      # resources:
+      #   requests:
+      #     cpu: "1"
+      #     memory: "1Gi"
+      #   limits:
+      #     cpu: "2"
+      #     memory: "2Gi"

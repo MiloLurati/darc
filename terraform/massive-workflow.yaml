@@ -1,0 +1,87 @@
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: WorkflowTemplate
+# metadata:
+#   name: massive
+#   namespace: argo
+#   labels:
+#     stress: "true"
+# spec:
+#   entrypoint: main
+#   arguments:
+#     parameters:
+#       - name: "nodes"
+#         value: "1"
+#       - name: "sleep"
+#         value: "1s"
+#   ttlStrategy:
+#     secondsAfterSuccess: 60
+#   podGC:
+#     strategy: OnPodSuccess
+#   templates:
+#     - name: main
+#       dag:
+#         tasks:
+#           - name: sleep
+#             template: sleep
+#             withSequence:
+#               count: "{{workflow.parameters.nodes}}"
+#     - name: sleep
+#       metadata:
+#         labels:
+#           stress: "true"
+#       container:
+#         image: argoproj/argosay:v2
+#         resources:
+#           requests:
+#             memory: 64Mi
+#             cpu: 0.1
+#         args:
+#           - sleep
+#           - "{{workflow.parameters.sleep}}"
+
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: stress-test-
+  namespace: argo
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: "nodes"
+        value: "8" # Adjust based on test requirements
+      - name: "sleep"
+        value: "2s" # Consider replacing or supplementing this with a more CPU/memory-intensive task
+  podGC:
+    strategy: OnPodSuccess
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - name: sleep
+            template: sleep
+            arguments:
+              parameters:
+                - name: "nodes"
+                  value: "{{workflow.parameters.nodes}}"
+                - name: "sleep"
+                  value: "{{workflow.parameters.sleep}}"
+            withSequence:
+              count: "{{workflow.parameters.nodes}}"
+    - name: sleep
+      inputs:
+        parameters:
+          - name: "nodes"
+          - name: "sleep"
+      container:
+        image: argoproj/argosay:v2
+        command: [sh, -c]
+        args: ["for i in $(seq 1 {{inputs.parameters.nodes}}); do echo $i; sleep {{inputs.parameters.sleep}}; done"]
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
