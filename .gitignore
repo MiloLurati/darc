@@ -30,3 +30,4 @@ terraform.rc
 .terraform.lick.hcl
 
 terraform/.terraform.lock.hcl
+azure_terraform/.terraform.lock.hcl
