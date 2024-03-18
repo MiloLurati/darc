@@ -57,6 +57,25 @@ spec:
 ...
 ```
 
+## Run Argo Workflow and Observe Scaling
+
+1. Submit the argo workflow:
+```bash
+argo submit -n argo --watch matrixmul.yaml
+```
+
+2. Observe the increase in pods:
+
+```bash
+kubectl get pods -n kube-system
+```
+
+3. Check for an increase in nodes:
+
+```bash
+kubectl get nodes
+```
+
 ## Test Cluster Autoscaler (Without Argo Workflows)
 
 1. Apply the cluster-autoscaler deployment (initially set to 0 replicas):
