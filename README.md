@@ -5,7 +5,11 @@ Create an IAM User in AWS and assign it the necessary policies. It's important t
 
 **Note:** Temporarily, you may use the `AdministratorAccess` policy for convenience, but it's crucial to identify and apply more granular policies tailored to your requirements for security best practices.
 
-## Setup AWS CLI Profile
+## Cloud Provider Setup
+
+Here follows the procedure to set up the necessary technologies for AWS provider, the provider available in this prototype. For other providers, please consult the relevant documentation.
+
+### Setup AWS CLI Profile
 1. Install the AWS CLI following the instructions from the official AWS documentation.
 2. Configure the AWS CLI by running `aws configure` and inputting your new IAM user's access key ID and secret access key when prompted.
 
