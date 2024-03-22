@@ -30,6 +30,9 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     name       = "agentpool"
     vm_size    = "Standard_D2_v2"
     node_count = var.node_count
+    enable_auto_scaling = true
+    min_count = 1
+    max_count = 3
   }
   linux_profile {
     admin_username = var.username
@@ -41,5 +44,26 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   network_profile {
     network_plugin    = "kubenet"
     load_balancer_sku = "standard"
+  }
+}
+
+resource "helm_release" "argo_workflows" {
+  depends_on = [resource.azurerm_kubernetes_cluster.k8s]
+
+  name       = "argo-workflows"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-workflows"
+  version    = "0.40.14"
+  create_namespace = true
+  namespace  = "argo"
+
+  set {
+    name  = "workflow.serviceAccount.create"
+    value = "true"
+  }
+  
+  set {
+    name = "workflow.rbac.create"
+    value = "true"
   }
 }
