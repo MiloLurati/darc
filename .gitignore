@@ -27,7 +27,4 @@ override.tf.json
 terraform.rc
 
 # Ignore CLI hcl files
-.terraform.lick.hcl
-
-terraform/.terraform.lock.hcl
-azure_terraform/.terraform.lock.hcl
+.terraform.lock.hcl
