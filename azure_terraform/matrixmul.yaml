@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: matrix-multiplication-
+spec:
+  serviceAccountName: argo-workflow
+  entrypoint: matrix-operations
+  arguments:
+    parameters:
+    - name: tasks
+      value: "4"  # Number of parallel matrix multiplication tasks
+
+  templates:
+  - name: matrix-operations
+    inputs:
+      parameters:
+      - name: tasks
+    steps:
+    - - name: generate-sequence
+        template: generate-tasks-sequence
+        arguments:
+          parameters:
+          - name: tasks
+            value: "{{inputs.parameters.tasks}}"
+    - - name: multiply-matrix
+        template: matrix-multiplication
+        arguments:
+          parameters:
+          - name: task
+            value: "{{item}}"
+        withParam: "{{steps.generate-sequence.outputs.result}}"
+
+  - name: generate-tasks-sequence
+    inputs:
+      parameters:
+      - name: tasks
+    script:
+      image: python:3.9
+      command: [python]
+      source: |
+        import json
+        tasks = int('{{inputs.parameters.tasks}}')
+        print(json.dumps(list(range(1, tasks + 1))))
+
+  - name: matrix-multiplication
+    inputs:
+      parameters:
+      - name: task
+    container:
+      image: jupyter/scipy-notebook:latest
+      command: [python, -c]
+      args: 
+        - |
+          import numpy as np
+          # Generate two random matrices
+          A = np.random.rand(100, 100)  # Adjust size as needed
+          B = np.random.rand(100, 100)  # Adjust size as needed
+          # Multiply the matrices
+          C = np.dot(A, B)
+          # Optionally, output some information
+          print('Matrix multiplication completed.')
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "100Mi"
+        limits:
+          cpu: "200m"
+          memory: "200Mi"
+         
+
